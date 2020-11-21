@@ -1,0 +1,93 @@
+---
+title: "Session 5 Lisa Hoffmann"
+output:
+  html_document:
+    df_print: paged
+---
+
+Das Cluster Dendrogramm und der Cluster Plot haben bei mir nicht funktioniert.
+
+```{r}
+library(tidyverse)
+library(cluster)
+library(caret)
+```
+
+```{r}
+all <- read_csv("all.csv")
+```
+
+```{r}
+users_books <- all %>%
+  group_by(`Book-Title`) %>%
+  mutate(no_of_books = n()) %>%
+  filter(no_of_books > 49) %>%
+  filter(`Book-Rating` > 9) %>%
+  select(`User-ID`, `Book-Title`)
+```
+
+```{r}
+users_books <- users_books %>%
+  unique()
+books_wide <- users_books %>%
+  mutate(i = 1) %>%
+  spread(`Book-Title`,i,fill=0)
+```
+
+
+```{r}
+wss <- (nrow(books_wide)-1)*sum(apply(books_wide,2,var))
+  for (i in 2:10) wss[i] <- sum(kmeans(books_wide,
+                                       centers=i)$withinss)
+plot(1:10, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+```
+
+Als Knickpunkt habe ich hier 3 gewählt.
+
+
+
+```{r}
+k.means.fit <- kmeans(books_wide, 3) 
+```
+
+```{r}
+k.means.fit$size
+```
+
+
+```{r}
+user_cluster <- data.frame(books_wide$'User-ID',k.means.fit$cluster)
+user_cluster
+```
+
+
+
+```{r}
+book_cluster <- user_cluster %>%
+  rename('User-ID' = books_wide..User.ID. , Cluster = k.means.fit.cluster) %>%
+  left_join(users_books) %>%
+  select('User-ID',Cluster,'Book-Title') %>%
+  rename('Booktitle' = 'Book-Title') %>%
+  group_by(Booktitle,Cluster) %>%
+  summarise()
+book_cluster
+```
+
+Hier ist noch eine andere Darstellungsweise der Tabelle:
+
+```{r}
+book_cluster <- book_cluster %>%
+  unique()
+book_cluster_wide <- book_cluster %>%
+  mutate(i = 1) %>%
+  spread(Cluster,i,fill=0)
+book_cluster_wide
+```
+
+
+In diesen beiden Tabellen kann man ablesen, welches Buch in welches Cluster gehört.
+Wie wir heute schon festgestellt haben und wie hier zu sehen ist, gibt es sehr viele Überlappungen.
+
+
+
