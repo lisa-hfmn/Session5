@@ -45,6 +45,13 @@ plot(1:10, wss, type="b", xlab="Number of Clusters",
 
 Als Knickpunkt habe ich hier 3 gewählt.
 
+```{r}
+books.dist <- dist(books_wide, method="euclidean")
+books.hc <- hclust(books.dist, method = "ward.D2")
+plot(books.hc)
+groups <- cutree(books.hc, k=3) 
+rect.hclust(books.hc, k=3, border="red")
+```
 
 
 ```{r}
